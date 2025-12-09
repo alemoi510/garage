@@ -1,8 +1,16 @@
 const express = require('express');
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
+
+// Check if database exists, if not provide helpful error message
+if (!fs.existsSync('inventory.db')) {
+  console.error('Database not found! Please run "npm run init-db" first.');
+  process.exit(1);
+}
+
 const db = new Database('inventory.db');
 const PORT = 3000;
 
@@ -74,12 +82,16 @@ app.put('/api/products/:id', (req, res) => {
     }
     
     // Validation
-    if (quantity !== undefined && quantity < 0) {
-      return res.status(400).json({ error: 'Quantity must be non-negative' });
+    if (quantity !== undefined) {
+      if (typeof quantity !== 'number' || quantity < 0) {
+        return res.status(400).json({ error: 'Quantity must be a non-negative number' });
+      }
     }
     
-    if (price !== undefined && price < 0) {
-      return res.status(400).json({ error: 'Price must be non-negative' });
+    if (price !== undefined) {
+      if (typeof price !== 'number' || price < 0) {
+        return res.status(400).json({ error: 'Price must be a non-negative number' });
+      }
     }
     
     const update = db.prepare(`
